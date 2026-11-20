@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Testing guide · UNIT-7 Escape Protocol</title>
+  <meta name="description" content="Run the automated tests in the browser and check every requirement of the brief by hand.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%231f2933'/%3E%3Ccircle cx='8' cy='8' r='3.5' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="testing">
+  <main class="page">
+    <div class="page-intro">
+      <h1>Testing guide</h1>
+      <p>Everything needed to verify the project: an automated test suite that runs right here in the browser, a checklist that walks through each requirement of the brief in the simulator, and the commands for running the tests and benchmark from a terminal.</p>
+    </div>
+
+    <section class="section" style="margin-top:8px">
+      <h2>1. Run the automated tests</h2>
+      <p class="sub">19 tests check that the algorithms are correct, not just that they run: A* is optimal, space-time paths never cross an active laser, every lock has exactly one solution, the fuzzy rules behave sensibly, and the agent clearly beats a fixed plan. This button runs the Python test code (<code>escape_room/checks.py</code>) in your browser, which takes one to two minutes. The same tests run from a terminal with <code>python -m unittest -v</code> in under a minute.</p>
+      <div class="panel">
+        <div class="btnrow" style="margin-top:0;align-items:center">
+          <button class="btn primary" id="runTests">Run all tests</button>
+          <span class="hint" id="testStatus">Not run yet.</span>
+          <span class="pynote" id="pynote" style="margin-left:auto">Starting Python…</span>
+        </div>
+        <div class="progress"><div id="testProg"></div></div>
+        <div id="testOut"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>2. Check each requirement in the simulator</h2>
+      <p class="sub">Each link opens the simulator already set up for that check, with a fixed seed, so you see exactly what is described. Tick a row once you have seen it; ticks are saved in this browser.</p>
+      <div class="tablecard"><table class="checklist">
+        <thead><tr><th></th><th>Requirement from the brief</th><th>What to do</th><th>What you should see</th></tr></thead>
+        <tbody id="checklist"></tbody>
+      </table></div>
+      <p class="hint" id="checkCount" style="margin-top:8px"></p>
+    </section>
+
+    <section class="section">
+      <h2>3. Measure performance</h2>
+      <p class="sub">The brief asks for evaluation using completion time, path cost, states explored and success rate. Open the <a href="benchmark.html">Benchmark</a> page and press <b>Run experiment</b> with the defaults (10 Dynamic facilities). Expect the full UNIT-7 agent to escape nearly every time and the fixed script only about one time in five. The page also shows reference results from 100 facilities for comparison.</p>
+    </section>
+
+    <section class="section">
+      <h2>4. Run it from a terminal</h2>
+      <p class="sub">You need Python 3.9 or later. Only the standard library is used, so there is nothing to install.</p>
+      <pre class="cmd"><span class="c"># get the code</span>
+git clone https://github.com/RohanRaoCs/ai-escape-room.git
+cd ai-escape-room
+
+<span class="c"># desktop demo window (Tkinter)</span>
+python main.py
+
+<span class="c"># the 19 correctness tests (the same ones as above)</span>
+python -m unittest -v
+
+<span class="c"># full evaluation on 100 facilities per design, about 3 minutes; writes results/summary.md and CSVs</span>
+python evaluate.py
+
+<span class="c"># this website, locally, at http://localhost:8000</span>
+python -m http.server</pre>
+    </section>
+
+    <section class="section">
+      <h2>5. Deploy your own copy</h2>
+      <p class="sub">The site is static: HTML pages, a little JavaScript for drawing, and the Python package, which Pyodide runs in the browser. There is no build step, so it can be hosted anywhere.</p>
+      <div class="grid2">
+        <div class="card"><h3>Vercel</h3><p>Fork the repository on GitHub, then in Vercel choose <b>Add New → Project</b>, import the fork and press <b>Deploy</b>. No settings need changing; <code>vercel.json</code> is already included.</p></div>
+        <div class="card"><h3>GitHub Pages</h3><p>In the repository, go to <b>Settings → Pages</b>, choose "Deploy from a branch", select <b>main</b> and <b>/ (root)</b>, and save. The site appears at <code>&lt;user&gt;.github.io/ai-escape-room</code>.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="assets/site.js"></script>
+  <script src="assets/charts.js"></script>
+  <script src="assets/testing.js"></script>
+</body>
+</html>
