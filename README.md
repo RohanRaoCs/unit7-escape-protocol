@@ -4,11 +4,11 @@
 
 | Member | Student ID | Role |
 |---|---|---|
-| Rohan | to be added | Project setup, backend (core AI modules) |
-| Ibraam | to be added | Backend (agent, simulation, learning, evaluation) |
-| Vidhi | to be added | Frontend |
-| Ziya | to be added | Frontend |
-| Yousef | to be added | Testing and evaluation |
+| Rohan | 8853666 | Project setup, backend (core AI modules) |
+| Ibraam | 9001591 | Backend (agent, simulation, learning, evaluation) |
+| Vidhi | 8960008 | Frontend |
+| Ziya | 9619951 | Frontend |
+| Yousef | 9851501 | Testing and evaluation |
 
 An AI agent, UNIT-7, escapes a facility that keeps changing around it. It collects three keycards, solves a lock puzzle at a terminal and reaches the exit. Meanwhile a drone hunts it, laser gates switch on and off, coolant spreads, ceilings collapse onto its route, and power surges rewrite the lock's rules.
 
