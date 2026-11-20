@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learning lab · UNIT-7 Escape Protocol</title>
+  <meta name="description" content="Train a Q-learning agent on the escape room and compare learning with planning when the map changes.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%231f2933'/%3E%3Ccircle cx='8' cy='8' r='3.5' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="learning">
+  <main class="page">
+    <div class="page-intro">
+      <h1>Learning lab</h1>
+      <p>A second agent learns the escape by trial and error using <b>tabular Q-learning</b>, on a smaller facility with two keycards and no lock. It starts knowing nothing and gradually learns which move is best in each situation. The lab then asks: what happens to a learned behaviour when the world changes? The training runs in Python (<code>escape_room/qlearn.py</code>) inside your browser.</p>
+      <p style="margin-top:8px"><span class="pynote" id="pynote">Starting Python…</span></p>
+    </div>
+
+    <div class="howto">
+      <div><span class="n">1</span><b>Train.</b> Press "Train 500 episodes" two or three times. The blue curve should fall until it meets the purple A* optimum.</div>
+      <div><span class="n">2</span><b>Test.</b> Press "Play greedy policy" to watch the learned behaviour, then "Show A* route" to compare it with search.</div>
+      <div><span class="n">3</span><b>Break it.</b> Press "Collapse the learned route". The policy walks into the new wall, while A* simply reroutes. Train again to watch it recover.</div>
+    </div>
+
+    <div class="split">
+      <div class="stack">
+        <div class="panel">
+          <header><h2>Training</h2></header>
+          <p class="lede">One episode is one attempt from the start, ending at the exit or after 400 steps.</p>
+          <div class="row" title="Which small facility to learn on"><span>Facility seed</span><input type="number" id="qSeed" value="4" min="1"></div>
+          <div class="row" title="How far each update moves the old estimate toward the new one"><span>Learning rate α</span><input type="number" id="qAlpha" value="0.2" step="0.05" min="0.01" max="1"></div>
+          <div class="row" title="How much future reward counts compared with immediate reward"><span>Discount γ</span><input type="number" id="qGamma" value="0.97" step="0.01" min="0.5" max="0.999"></div>
+          <div class="row" title="Exploration ε starts at 1 (fully random) and is multiplied by this after every episode, down to 0.05"><span>ε decay per episode</span><input type="number" id="qDecay" value="0.993" step="0.001" min="0.9" max="0.9999"></div>
+          <details class="about"><summary>What these settings do</summary>
+            <p>After each move the agent updates its estimate Q(state, move) toward <i>reward + γ × best estimate from the next state</i>. α sets how big that step is. Early on it explores randomly (ε = 1); ε shrinks every episode, so it increasingly follows what it has learned. Changing a setting starts a fresh lab.</p>
+            <p>Rewards: −1 per step, −5 for walking into a wall, +30 for each new keycard, +100 for exiting with both.</p>
+          </details>
+          <div class="btnrow">
+            <button class="btn primary" id="qTrain">Train 500 episodes</button>
+            <button class="btn" id="qNew" title="Forget everything learned and start over">New lab</button>
+          </div>
+        </div>
+        <div class="panel">
+          <header><h2>Test the policy</h2></header>
+          <div class="btnrow" style="margin-top:0">
+            <button class="btn" id="qPlay" title="Follow the best-known move from each cell, with no exploration">Play greedy policy</button>
+            <button class="btn" id="qAstar" title="Plan the optimal escape with A* (no learning needed)">Show A* route</button>
+            <button class="btn warn" id="qMutate" title="Drop rubble on a cell of the learned route">Collapse the learned route</button>
+          </div>
+          <div class="readout" id="qReadout" style="margin-top:12px"></div>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <header><h2>What the agent has learned</h2><div class="row" style="margin:0"><span>Show values when</span><select id="qMask" title="The learned values depend on which keycards are already held"></select></div></header>
+          <details class="about"><summary>How to read the map</summary>
+            <p>Each arrow is the move the agent currently thinks is best from that cell. Darker blue means a higher learned value: the agent expects to reach the exit sooner from there. Cells without arrows have never been visited. Because the right move depends on which keycards are held, use the selector to switch between "no keycards", "one keycard" and so on.</p>
+          </details>
+          <div class="lab-stage has-overlay" style="border:none;padding:0"><div class="pyload" id="pyload"></div><canvas id="qCanvas" aria-label="Learned values and policy arrows"></canvas></div>
+        </div>
+        <div class="panel">
+          <details class="about"><summary>How to read the learning curve</summary>
+            <p>Grey: steps taken in each episode. Blue: the 50-episode average, which should fall as the agent learns. Green: the share of recent episodes that reached the exit (scaled to the chart). Purple: the shortest possible escape, found by A*. An orange line marks each collapse you trigger.</p>
+          </details>
+          <canvas id="qCurve"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="assets/site.js"></script>
+  <script src="assets/charts.js"></script>
+  <script src="assets/learning.js"></script>
+</body>
+</html>
