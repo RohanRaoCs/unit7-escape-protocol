@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Benchmark · UNIT-7 Escape Protocol</title>
+  <meta name="description" content="Measure success rate, completion time, path cost and states explored across agent designs.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%231f2933'/%3E%3Ccircle cx='8' cy='8' r='3.5' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="benchmark">
+  <main class="page">
+    <div class="page-intro">
+      <h1>Benchmark</h1>
+      <p>Runs many complete missions, without animation, on the same seeded facilities for each agent design, and compares them. Every facility is generated from its seed, so anyone running the same settings gets the same numbers. The runs use the same Python code as <code>python evaluate.py</code>, running in your browser; nothing is sent anywhere.</p>
+      <p style="margin-top:8px"><span class="pynote" id="pynote">Starting Python…</span></p>
+    </div>
+
+    <div class="howto">
+      <div><span class="n">1</span><b>Pick designs.</b> Keep all seven ticked to see the full comparison, including the fixed-script baseline.</div>
+      <div><span class="n">2</span><b>Choose a facility.</b> "Dynamic" is the main test. 10 facilities take about a minute in the browser; the report uses 100 (run <code>python evaluate.py</code> for those, about 3 minutes).</div>
+      <div><span class="n">3</span><b>Run and read.</b> Green values are the best in each column. Download the CSV to check any run individually.</div>
+    </div>
+
+    <div class="split">
+      <div class="stack">
+        <div class="panel">
+          <header><h2>Mission experiment</h2></header>
+          <p class="lede">Each ticked design runs a full mission on every facility.</p>
+          <div class="cfglist" id="benchCfgs"></div>
+          <details class="about" style="margin-top:8px"><summary>What the designs differ in</summary>
+            <ul>
+              <li><b>UNIT-7 full</b>: every technique on. This is the agent in the simulator.</li>
+              <li><b>Snapshot planning</b>: ignores the laser gate timetable.</li>
+              <li><b>Crisp avoidance</b>: replaces fuzzy logic with a fixed rule.</li>
+              <li><b>Dijkstra / Greedy / BFS</b>: swap A* for another search algorithm.</li>
+              <li><b>Fixed script</b>: plans once at the start and never reacts. This is the "fixed sequence of actions" the brief warns against.</li>
+            </ul>
+          </details>
+          <div class="row" title="Static: nothing changes. Dynamic: drone, gates, collapses, a power surge. Chaos: more of everything."><span>Facility</span><select id="benchDyn"><option value="off">Static</option><option value="normal" selected>Dynamic</option><option value="chaos">Chaos</option></select></div>
+          <div class="row" title="How many different facilities to test each design on"><span>Number of facilities</span><input type="number" id="benchN" value="10" min="1" max="100"></div>
+          <div class="row" title="Facilities use seeds first, first+1, first+2 and so on. The report uses 5000."><span>First seed</span><input type="number" id="benchSeed" value="5000" min="1"></div>
+          <div class="btnrow">
+            <button class="btn primary" id="benchRun">Run experiment</button>
+            <button class="btn" id="benchStop" disabled>Stop</button>
+            <button class="btn" id="benchCsv" disabled title="One row per mission, every metric">Download CSV</button>
+          </div>
+          <div class="progress"><div id="benchProg"></div></div>
+          <div class="hint" id="benchStatus" style="margin-top:6px">Ready.</div>
+        </div>
+        <div class="panel">
+          <header><h2>Component experiments</h2></header>
+          <p class="lede">Test one technique in isolation, on identical problems.</p>
+          <div class="btnrow" style="margin-top:0">
+            <button class="btn" id="microRun" title="Same start and goal for A*, Dijkstra, Greedy and BFS">Compare planners</button>
+            <button class="btn" id="cspRun" title="Same 40 locks for all four constraint solvers">Compare lock solvers</button>
+          </div>
+        </div>
+        <div class="panel">
+          <header><h2>What each measure means</h2></header>
+          <ul style="margin:0;padding-left:18px;font-size:0.86rem;color:var(--ink-2)">
+            <li><b>Success</b>: share of missions that escaped within 900 ticks with the hull intact.</li>
+            <li><b>Ticks</b>: completion time. One tick is one move or one wait. Averaged over successful runs.</li>
+            <li><b>Path cost</b>: the sum of the step costs actually paid (1 per cell, 6 on coolant).</li>
+            <li><b>States explored</b>: search nodes expanded by every plan in the mission. This measures computational effort.</li>
+            <li><b>Replans</b>: how many times a plan was thrown away because the world changed.</li>
+            <li><b>Drone hits / laser zaps</b>: damage events. <b>Integrity</b>: hull remaining at the end.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="stack" id="benchOut">
+        <div class="tablecard">
+          <div style="padding:14px 16px 4px"><h2>Reference results</h2><p class="hint" style="margin:4px 0 8px">From <code>python evaluate.py</code>: 100 facilities (seeds 5000–5099) per cell. Run the experiment to reproduce any column; the same seeds give the same numbers.</p></div>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Design</th><th>Static</th><th>Dynamic</th><th>Chaos</th><th>States explored (Dynamic)</th></tr></thead>
+            <tbody>
+              <tr><td>UNIT-7 full: A* + fuzzy + space-time + BT</td><td>100%</td><td class="num-good">99%</td><td>91%</td><td>17,619</td></tr>
+              <tr><td>A* + fuzzy, snapshot planning</td><td>100%</td><td>92%</td><td>67%</td><td>6,133</td></tr>
+              <tr><td>A* + crisp avoidance (no fuzzy)</td><td>100%</td><td class="num-good">99%</td><td class="num-good">97%</td><td>12,255</td></tr>
+              <tr><td>Dijkstra + fuzzy + space-time</td><td>100%</td><td class="num-good">99%</td><td>91%</td><td>27,759</td></tr>
+              <tr><td>Greedy best-first + fuzzy + space-time</td><td>100%</td><td>94%</td><td>82%</td><td>3,735</td></tr>
+              <tr><td>BFS + fuzzy + space-time</td><td>100%</td><td>94%</td><td>81%</td><td>19,056</td></tr>
+              <tr><td>Fixed script (plans once, never adapts)</td><td>100%</td><td class="num-bad">22%</td><td class="num-bad">7%</td><td>303</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="assets/site.js"></script>
+  <script src="assets/charts.js"></script>
+  <script src="assets/benchmark.js"></script>
+</body>
+</html>
