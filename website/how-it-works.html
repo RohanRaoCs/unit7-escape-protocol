@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How it works · UNIT-7 Escape Protocol</title>
+  <meta name="description" content="How A* search, constraint satisfaction, a behaviour tree, fuzzy logic, a state machine and Q-learning fit together.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%231f2933'/%3E%3Ccircle cx='8' cy='8' r='3.5' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="how">
+  <main class="page">
+    <div class="page-intro">
+      <h1>How it works</h1>
+      <p>UNIT-7 combines six AI techniques, and each one has a specific job. This page explains what each technique does, why it is there, and where you can see it working in the simulator. Everything is written in Python 3 using only the standard library; the website runs the same Python package in the browser with Pyodide.</p>
+    </div>
+
+    <div class="toc" aria-label="Jump to">
+      <a href="#mission">The mission</a><a href="#architecture">Architecture</a><a href="#astar">A* search</a><a href="#csp">Constraint satisfaction</a>
+      <a href="#bt">Behaviour tree</a><a href="#fuzzy">Fuzzy logic</a><a href="#fsm">State machine</a><a href="#rl">Q-learning</a><a href="#code">Code</a><a href="#dynamics">What changes</a>
+    </div>
+
+    <section class="section" id="mission">
+      <h2>The mission</h2>
+      <p class="sub">The facility is a 31 × 21 grid generated from a seed: a maze with extra loops and a few open rooms. UNIT-7 starts in the top-left corner. To escape it must collect three keycards (it chooses the order), reach the terminal and work out the vault code from the clues there, then reach the exit while that code is still valid. A run fails if the hull reaches zero or 900 ticks pass.</p>
+    </section>
+
+    <section class="section" id="architecture">
+      <h2>Architecture</h2>
+      <p class="sub">Every tick, the world updates, the sensors measure the drone's distance across the map, the fuzzy system turns that into a threat level, and the behaviour tree decides what to do. Navigation actions call A*; the lock action calls the CSP solver.</p>
+      <svg class="arch" viewBox="0 0 1000 300" role="img" aria-label="Agent architecture diagram">
+          <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6b7280"/></marker></defs>
+          <g font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#1f2933">
+            <rect x="10" y="110" width="170" height="80" rx="4" fill="#ffffff" stroke="#d1d5db"/>
+            <text x="95" y="140" text-anchor="middle" font-weight="600">World + sensors</text>
+            <text x="95" y="160" text-anchor="middle" fill="#6b7280" font-size="12">tiles, gates, coolant,</text>
+            <text x="95" y="176" text-anchor="middle" fill="#6b7280" font-size="12">drone distance field</text>
+
+            <rect x="230" y="20" width="200" height="80" rx="4" fill="#ffffff" stroke="#ea580c"/>
+            <text x="330" y="50" text-anchor="middle" font-weight="600">Fuzzy threat (Mamdani)</text>
+            <text x="330" y="70" text-anchor="middle" fill="#6b7280" font-size="12">distance · alertness · integrity</text>
+            <text x="330" y="86" text-anchor="middle" fill="#6b7280" font-size="12">→ threat 0–100</text>
+
+            <rect x="230" y="200" width="200" height="80" rx="4" fill="#ffffff" stroke="#ea580c"/>
+            <text x="330" y="230" text-anchor="middle" font-weight="600">Drone FSM</text>
+            <text x="330" y="250" text-anchor="middle" fill="#6b7280" font-size="12">patrol · alert · chase · cooldown</text>
+
+            <rect x="480" y="100" width="210" height="100" rx="4" fill="#f7f8fa" stroke="#2563eb" stroke-width="1.5"/>
+            <text x="585" y="135" text-anchor="middle" font-weight="600">Behaviour tree</text>
+            <text x="585" y="155" text-anchor="middle" fill="#6b7280" font-size="12">Survive › Escape › Crack lock</text>
+            <text x="585" y="171" text-anchor="middle" fill="#6b7280" font-size="12">› Collect keycards › Hold</text>
+
+            <rect x="740" y="20" width="240" height="80" rx="4" fill="#ffffff" stroke="#2563eb"/>
+            <text x="860" y="50" text-anchor="middle" font-weight="600">A* planner (space-time)</text>
+            <text x="860" y="70" text-anchor="middle" fill="#6b7280" font-size="12">risk-weighted costs, plan monitor,</text>
+            <text x="860" y="86" text-anchor="middle" fill="#6b7280" font-size="12">repair on blockage / threat drift</text>
+
+            <rect x="740" y="200" width="240" height="80" rx="4" fill="#ffffff" stroke="#7c3aed"/>
+            <text x="860" y="230" text-anchor="middle" font-weight="600">CSP lock solver</text>
+            <text x="860" y="250" text-anchor="middle" fill="#6b7280" font-size="12">MRV + forward checking + AC-3</text>
+            <text x="860" y="266" text-anchor="middle" fill="#6b7280" font-size="12">re-solves after a power surge</text>
+          </g>
+          <g stroke="#6b7280" fill="none" marker-end="url(#ah)">
+            <path d="M180,135 L228,70"/><path d="M180,165 L228,235"/>
+            <path d="M430,60 L480,120"/>
+            <path d="M330,200 L330,102"/>
+            <path d="M690,130 L738,70"/><path d="M690,170 L738,235"/>
+            <path d="M430,52 L738,52" stroke-dasharray="4 4"/>
+          </g>
+          <text x="585" y="45" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="#6b7280">threat → step-cost penalty</text>
+        </svg>
+    </section>
+
+    <section class="tech-section" id="astar">
+      <aside><h2>A* search</h2><p>Plans every route the agent walks.</p><p><code>escape_room/search.py</code></p><a class="btn" href="simulator.html?scenario=block">See it replan</a></aside>
+      <div class="body">
+        <p><b>What it does.</b> Finds the cheapest route from the agent to its current goal. The heuristic is the Manhattan distance; it never overestimates (each step costs at least 1), so A* always returns an optimal route while exploring far fewer cells than Dijkstra.</p>
+        <p><b>Cost of a step.</b> 1 on clean floor, 6 on coolant, plus a penalty near the drone that grows with the fuzzy threat level. Routes bend away from danger in proportion to how dangerous it is.</p>
+        <p><b>Planning in time as well as space.</b> Laser gates follow a known timetable (on for 4 ticks out of every 10). With space-time planning, a state is "this cell at this point in the timetable", and waiting is allowed. A* can therefore plan to pause for one tick and walk through a gate as it switches off, instead of taking a long detour.</p>
+        <p><b>Noticing change.</b> Every tick, the remaining route is checked. A new plan is made when rubble blocks it, when a gate would fire, when the agent has been pushed off it, or when the threat along it has risen more than 20% since it was planned.</p>
+        <p><b>Choosing the keycard order.</b> All 3! = 6 orders are scored with breadth-first distances, and the shortest tour (agent → three keycards → terminal) wins.</p>
+      </div>
+    </section>
+
+    <section class="tech-section" id="csp">
+      <aside><h2>Constraint satisfaction</h2><p>Cracks the vault lock.</p><p><code>escape_room/csp.py</code></p><a class="btn" href="simulator.html?scenario=surge">See the lock change</a></aside>
+      <div class="body">
+        <p><b>The puzzle.</b> Five dials D1 to D5, each a digit from 0 to 9, all different. The clues are constraints such as "D2 + D4 = 11", "D3 &gt; D5", "D1 is odd" or a checksum.</p>
+        <p><b>Making fair puzzles.</b> The generator adds random true clues until exactly one code fits, then removes every clue it can without losing uniqueness. Each puzzle is therefore minimal: no clue is redundant.</p>
+        <p><b>Four solvers to compare.</b></p>
+        <ul>
+          <li>Plain backtracking: try values in order and undo on conflict.</li>
+          <li>Forward checking: after each choice, remove values that can no longer work from the other dials.</li>
+          <li>MRV: fill the dial with the fewest remaining options first.</li>
+          <li>AC-3: make every pair of dials consistent before searching at all.</li>
+        </ul>
+        <p>Together these cut the search from about 1,850 assignments to about 8. In the simulator, dialling in the code takes one tick per four assignments, so a better solver means a faster escape.</p>
+        <p><b>When the constraints change.</b> A power surge rewires two dials: clues that no longer hold are removed and new ones are added. The agent's known code stops working, and it must solve the new puzzle.</p>
+      </div>
+    </section>
+
+    <section class="tech-section" id="bt">
+      <aside><h2>Behaviour tree</h2><p>Decides what to do next.</p><p><code>escape_room/bt.py</code>, <code>agent.py</code></p><a class="btn" href="simulator.html?scenario=escape">See it decide</a></aside>
+      <div class="body">
+        <p><b>The tree, in priority order:</b></p>
+        <ul>
+          <li><b>Survive</b>: if the threat is high, evade the drone.</li>
+          <li><b>Escape</b>: if the vault is unlocked, go to the exit.</li>
+          <li><b>Crack the lock</b>: if all keycards are held, go to the terminal and solve the lock.</li>
+          <li><b>Collect keycards</b>: plan the best tour and go to the next keycard.</li>
+          <li><b>Hold position</b>: if no route currently exists, wait.</li>
+        </ul>
+        <p><b>Why a tree.</b> It is evaluated from the top every tick, so Survive interrupts anything below it the moment danger appears, and the agent picks up its task again once the danger has passed. A power surge needs no special code: "Vault unlocked?" simply fails and the tree falls through to "Crack the lock".</p>
+      </div>
+    </section>
+
+    <section class="tech-section" id="fuzzy">
+      <aside><h2>Fuzzy logic</h2><p>Judges how dangerous the drone is.</p><p><code>escape_room/fuzzy.py</code></p><a class="btn" href="simulator.html?scenario=alarm">See it react</a></aside>
+      <div class="body">
+        <p><b>Why fuzzy.</b> "Close", "alert" and "badly damaged" do not have sharp boundaries. A drone 4 cells away is somewhat near and somewhat medium-distance. Fuzzy logic lets the agent reason with those partial memberships instead of hard thresholds.</p>
+        <p><b>Inputs.</b></p>
+        <ul>
+          <li>Distance to the drone, measured along corridors, so walls give cover.</li>
+          <li>How alert the drone is, taken from its state machine.</li>
+          <li>The agent's hull integrity.</li>
+        </ul>
+        <p><b>Rules.</b> Nine rules map these inputs to a threat level, for example "IF distance is Near AND the drone is Alert THEN threat is Very High" and "IF distance is Medium AND integrity is Critical THEN threat is Medium". A damaged agent is therefore more careful.</p>
+        <p><b>Output.</b> A threat score from 0 to 100 (Mamdani inference, centroid defuzzification). It raises A* step costs near the drone, and above 68 it makes the behaviour tree switch to evasion.</p>
+      </div>
+    </section>
+
+    <section class="tech-section" id="fsm">
+      <aside><h2>Finite state machine</h2><p>Controls the adversary.</p><p><code>escape_room/drone.py</code></p><a class="btn" href="simulator.html?scenario=alarm">See the drone</a></aside>
+      <div class="body">
+        <p>The security drone has four states:</p>
+        <ul>
+          <li><b>Patrol</b> between waypoints until it sees the agent (within its range, with a clear line of sight).</li>
+          <li><b>Alert</b>: investigate the spot where it last saw the agent.</li>
+          <li><b>Chase</b>, if it still sees the agent, until it loses sight for 6 ticks or its 30-tick battery runs out.</li>
+          <li><b>Cooldown</b> for 12 ticks, then back to Patrol.</li>
+        </ul>
+        <p>Contact costs the agent 25% of its hull and stuns it for 2 ticks.</p>
+      </div>
+    </section>
+
+    <section class="tech-section" id="rl">
+      <aside><h2>Q-learning</h2><p>A learning agent to compare against.</p><p><code>escape_room/qlearn.py</code></p><a class="btn" href="learning.html">Open the lab</a></aside>
+      <div class="body">
+        <p><b>What it learns.</b> A table of values Q(cell, keycards held, move), filled in by trial and error with ε-greedy exploration. After a few hundred episodes, following the best value from each cell gives an escape that is at or near the shortest possible.</p>
+        <p><b>Why it is not UNIT-7's controller.</b> A learned table describes the map it was trained on. When rubble falls on its route, the policy walks straight into it until it has been retrained, whereas A* finds a new route in a few milliseconds. The lab demonstrates this directly.</p>
+      </div>
+    </section>
+
+    <section class="section" id="code">
+      <h2>Where the code is</h2>
+      <p class="sub">One Python package drives the desktop app (<code>python main.py</code>), the tests (<code>python -m unittest</code>), the evaluation (<code>python evaluate.py</code>) and this website.</p>
+      <div class="tablecard"><table class="req">
+        <thead><tr><th>File</th><th>What it contains</th></tr></thead>
+        <tbody>
+          <tr><td><code>world.py</code></td><td>Seeded facility generator: maze, loops, rooms, keycards, terminal, laser gates, coolant.</td></tr>
+          <tr><td><code>search.py</code></td><td>A*, Dijkstra, greedy best-first and BFS, in snapshot or space-time mode.</td></tr>
+          <tr><td><code>csp.py</code></td><td>Lock generation, four solvers (backtracking, forward checking, MRV, AC-3), power-surge changes.</td></tr>
+          <tr><td><code>fuzzy.py</code></td><td>Mamdani fuzzy system and the threat rule base.</td></tr>
+          <tr><td><code>bt.py</code>, <code>agent.py</code></td><td>Behaviour tree nodes and the agent: decisions, navigation, plan monitoring, lock solving, evasion, fixed-script baseline.</td></tr>
+          <tr><td><code>drone.py</code></td><td>The drone's finite state machine.</td></tr>
+          <tr><td><code>sim.py</code></td><td>Simulation loop, dynamic events, collisions, operator tools.</td></tr>
+          <tr><td><code>qlearn.py</code></td><td>Tabular Q-learning lab.</td></tr>
+          <tr><td><code>evaluation.py</code>, <code>checks.py</code></td><td>Experiments and the 19 correctness checks.</td></tr>
+          <tr><td><code>view.py</code>, <code>web.py</code></td><td>Panel contents, and the bridge that hands the simulation state to this website as JSON.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="section" id="dynamics">
+      <h2>What changes during a run</h2>
+      <p class="sub">These are the dynamic elements the brief asks for, and how the agent responds to each one.</p>
+      <div class="tablecard"><table class="req">
+        <thead><tr><th>Change</th><th>When it happens</th><th>How the agent responds</th></tr></thead>
+        <tbody>
+          <tr><td>Ceiling collapse</td><td>Scheduled, aimed 2–12 steps ahead on the agent's current route. It never seals off an objective completely.</td><td>The route check finds "route blocked" and A* replans around the rubble.</td></tr>
+          <tr><td>Laser gates</td><td>On for 4 of every 10 ticks, each gate with its own timing.</td><td>Space-time A* times the crossing. Without it, the agent detours or gets zapped.</td></tr>
+          <tr><td>Security drone</td><td>Moves every tick, and chases when it sees the agent.</td><td>The fuzzy threat bends routes away from it; the behaviour tree evades when the threat is high.</td></tr>
+          <tr><td>Coolant leak</td><td>Spreads one cell at a time (every 14 ticks, or every 7 in Chaos).</td><td>Step cost rises to 6 there, and A* routes around it if that is cheaper.</td></tr>
+          <tr><td>Power surge</td><td>Two dials are rewired, and clues are removed and added.</td><td>The known code stops working; the behaviour tree returns to the terminal and the CSP solves the new puzzle.</td></tr>
+          <tr><td>You</td><td>Any time, from the simulator's Operator panel.</td><td>All of the above, with no warning.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <script src="assets/site.js"></script>
+</body>
+</html>
