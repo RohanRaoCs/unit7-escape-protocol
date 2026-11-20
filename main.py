@@ -21,8 +21,8 @@ COLORS = dict(floor="#ffffff", grid="#eef0f3", wall="#2f3b48", rubble="#b08559",
               searched="#dbe7fd", agent="#2563eb", patrol="#ea580c", alert="#d97706", chase="#dc2626", cooldown="#9ca3af",
               threat="#fbd5d5", gate_on="#dc2626", gate_off="#c4c9d0",
               terminal="#7c3aed", exit_open="#15803d", exit_locked="#dc2626", route="#2563eb", script_route="#6b7280")
-TEAM = ["Rohan", "Ibraam", "Vidhi", "Ziya", "Yousef"]
-STUDENT_IDS = ["ID to be added"] * 5  # replace with the real student IDs
+TEAM = ["Rohan", "Ibraam", "Vidhi", "Zia", "Yousif"]
+STUDENT_IDS = ["8853666", "9001591", "8960008", "9619951", "9851501"]
 
 
 class App:

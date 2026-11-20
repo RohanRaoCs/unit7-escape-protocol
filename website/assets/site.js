@@ -5,7 +5,7 @@
  * file system and returns escape_room.web, whose functions return JSON strings. */
 (function () {
   'use strict';
-  const REPO = 'https://github.com/RohanRaoCs/ai-escape-room';
+  const REPO = 'https://github.com/RohanRaoCs/unit7-escape-protocol';
   const PAGES = [
     ['index.html', 'Home', 'home'],
     ['simulator.html', 'Simulator', 'simulator'],

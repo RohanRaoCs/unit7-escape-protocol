@@ -4,54 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>UNIT-7 Escape Protocol</title>
-  <meta name="description" content="CSCI218 Group 2: an AI agent that escapes a dynamic escape room.">
-  <style>
-    :root { --bg: #0f1115; --panel: #171a21; --line: #262b36; --text: #e6e8ee; --muted: #9aa3b2; --accent: #38bdf8; }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
-    main { max-width: 860px; margin: 0 auto; padding: 48px 16px 64px; }
-    .tag { color: var(--accent); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
-    h1 { font-size: clamp(32px, 6vw, 48px); line-height: 1.1; margin: 8px 0 16px; }
-    h2 { font-size: 20px; margin: 40px 0 12px; }
-    p { color: var(--muted); margin: 0 0 12px; }
-    .wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
-    table { width: 100%; border-collapse: collapse; font-size: 15px; }
-    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
-    tr:last-child td { border-bottom: 0; }
-    th { color: var(--muted); font-weight: 500; font-size: 13px; }
-    code { font: 14px ui-monospace, Consolas, monospace; color: var(--accent); }
-    .status { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 12px; border: 1px solid var(--line); color: var(--muted); }
-    .done { color: #4ade80; border-color: #166534; }
-    footer { margin-top: 48px; color: var(--muted); font-size: 14px; }
-    a { color: var(--accent); }
-  </style>
+  <!-- The website lives in website/. This page only forwards visitors there. -->
+  <meta http-equiv="refresh" content="0; url=website/index.html">
+  <script>location.replace('website/index.html' + location.search + location.hash);</script>
 </head>
 <body>
-<main>
-  <div class="tag">CSCI218 · Topic 10 · Group 2</div>
-  <h1>UNIT-7 Escape Protocol</h1>
-  <p>An AI agent escapes a facility that keeps changing around it. It collects three keycards, solves a lock puzzle at a terminal and reaches the exit, while a drone hunts it, laser gates switch on and off, coolant spreads, ceilings collapse onto its route and power surges rewrite the lock's rules.</p>
-
-  <h2>AI techniques</h2>
-  <div class="wrap"><table>
-    <tr><th>Technique</th><th>Job</th><th>Module</th></tr>
-    <tr><td>A* search (space and time)</td><td>Plans routes and times its way through laser gates; Dijkstra, greedy and BFS for comparison</td><td><code>search.py</code></td></tr>
-    <tr><td>Constraint satisfaction</td><td>Generates and solves the vault lock with backtracking, forward checking, MRV and AC-3</td><td><code>csp.py</code></td></tr>
-    <tr><td>Behaviour tree</td><td>Decides what the agent does each tick</td><td><code>bt.py</code></td></tr>
-    <tr><td>Fuzzy logic (Mamdani)</td><td>Rates how dangerous each cell is</td><td><code>fuzzy.py</code></td></tr>
-    <tr><td>Finite state machine</td><td>Controls the drone: Patrol, Alert, Chase, Cooldown</td><td><code>drone.py</code></td></tr>
-  </table></div>
-
-  <h2>Progress</h2>
-  <div class="wrap"><table>
-    <tr><th>Part</th><th>Status</th></tr>
-    <tr><td>Project setup and core AI modules (world, search, CSP, fuzzy, behaviour tree, drone)</td><td><span class="status done">Done</span></td></tr>
-    <tr><td>Agent, simulation, Q-learning lab and evaluation</td><td><span class="status">In progress</span></td></tr>
-    <tr><td>Website: simulator, benchmark, learning lab</td><td><span class="status">In progress</span></td></tr>
-    <tr><td>Testing and evaluation runs</td><td><span class="status">In progress</span></td></tr>
-  </table></div>
-
-  <footer>Python 3.9+, standard library only. Source and setup instructions are on <a href="https://github.com/RohanRaoCs/unit7-escape-protocol">GitHub</a>.</footer>
-</main>
+  <p><a href="website/index.html">Open the UNIT-7 Escape Protocol website</a></p>
 </body>
 </html>
