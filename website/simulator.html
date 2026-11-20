@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulator · UNIT-7 Escape Protocol</title>
+  <meta name="description" content="Watch an AI agent plan, decide and adapt as it escapes a changing facility.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%231f2933'/%3E%3Ccircle cx='8' cy='8' r='3.5' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="simulator">
+  <main class="page wide">
+    <div class="page-intro">
+      <h1>Simulator</h1>
+      <p>UNIT-7 has to collect three keycards, crack the vault lock at the terminal, and reach the exit. The facility fights back: a drone hunts it, laser gates switch on and off, coolant spreads, ceilings collapse onto its route and power surges rewire the lock. Every decision the agent makes is shown live on the right. All of it is Python code (the same package as the desktop app and the tests) running in your browser.</p>
+    </div>
+
+    <div class="howto">
+      <div><span class="n">1</span><b>Press Run.</b> The agent starts planning on its own. Use the speed slider to slow it down.</div>
+      <div><span class="n">2</span><b>Watch the panels.</b> The tabs on the right show what each AI technique is doing at this moment.</div>
+      <div><span class="n">3</span><b>Change the facility.</b> Try a scenario below, or click the map to drop rubble and see it replan.</div>
+    </div>
+
+    <div class="callout" id="scenarioNote" hidden></div>
+
+    <div class="mission">
+      <div class="stagecol">
+        <div class="toolbar">
+          <button class="btn primary" id="btnRun" title="Start or pause the simulation (Space)">Run</button>
+          <button class="btn" id="btnStep" title="Advance exactly one tick (S)">Step</button>
+          <button class="btn" id="btnReset" title="Restart this same facility from tick 0 (R)">Restart</button>
+          <button class="btn" id="btnNew" title="Generate a different facility with a random seed">New facility</button>
+          <span class="sep"></span>
+          <label title="Simulation ticks per second">Speed <input type="range" id="speed" min="1" max="60" value="8"> <output id="speedOut">8</output>/s</label>
+          <label title="Every facility is generated from this number. The same seed always gives the same map and events.">Seed <input type="number" id="seed" value="5007" min="1"></label>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="world" aria-label="Facility map. Hover a cell for details."></canvas>
+          <div class="banner" id="banner" hidden></div>
+          <div class="tip" id="tip" hidden></div>
+          <div class="pyload" id="pyload"></div>
+        </div>
+        <div class="legend" aria-label="Map legend">
+          <span><i style="background:#2563eb"></i>UNIT-7 (ring = hull integrity)</span>
+          <span><i style="background:#ea580c"></i>Security drone (diamond = vision range)</span>
+          <span><i style="background:#db2777"></i>Keycards</span>
+          <span><i style="background:#7c3aed"></i>Lock terminal</span>
+          <span><i style="background:#15803d"></i>Vault exit (red while locked)</span>
+          <span><i style="background:#dc2626"></i>Laser gate (solid = on)</span>
+          <span><i style="background:#0d9488;opacity:.45"></i>Coolant (step cost 6)</span>
+          <span><i style="background:#a47148"></i>Collapse rubble</span>
+          <span><i style="background:#3b82f6;opacity:.35"></i>States explored by the last search</span>
+          <span><i style="background:#dc2626;opacity:.25"></i>Fuzzy threat field</span>
+        </div>
+
+        <div class="controls">
+          <fieldset>
+            <legend>Agent brain</legend>
+            <p class="lede">Which algorithms UNIT-7 uses. Changing one restarts the run on the same map so you can compare.</p>
+            <div class="row" title="The search algorithm used to plan routes"><span>Path planner</span>
+              <select id="cfgAlgo">
+                <option value="astar">A*</option><option value="dijkstra">Dijkstra</option>
+                <option value="greedy">Greedy best-first</option><option value="bfs">Breadth-first</option>
+              </select></div>
+            <div class="row" title="The constraint solver used to crack the vault lock"><span>Lock solver</span>
+              <select id="cfgCsp">
+                <option value="mrv_fc_ac3">MRV + FC + AC-3</option><option value="mrv_fc">MRV + forward checking</option>
+                <option value="fc">Forward checking</option><option value="bt">Plain backtracking</option>
+              </select></div>
+            <div class="checks">
+              <label><input type="checkbox" id="cfgFuzzy" checked><span>Fuzzy threat assessment<small>Off: a crisp rule, "flee if the drone is chasing and within 3 cells"</small></span></label>
+              <label><input type="checkbox" id="cfgTime" checked><span>Space-time planning<small>Plans around the laser gate timetable. Off: treats gates as frozen</small></span></label>
+              <label><input type="checkbox" id="cfgAdaptive" checked><span>Behaviour tree + replanning<small>Off: a fixed script, planned once and never changed</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Facility</legend>
+            <p class="lede">How hostile the facility is, and what to draw on the map.</p>
+            <div class="row" title="Static: nothing moves. Dynamic: drone, gates, 3 collapses, 1 power surge. Chaos: faster leak, 6 collapses, 2 surges."><span>Dynamics</span>
+              <select id="cfgDyn">
+                <option value="off">Static</option><option value="normal" selected>Dynamic</option><option value="chaos">Chaos</option>
+              </select></div>
+            <div class="checks">
+              <label><input type="checkbox" id="ovExplored" checked><span>States explored<small>Cells the last search looked at, fading over 15 ticks</small></span></label>
+              <label><input type="checkbox" id="ovRisk" checked><span>Fuzzy threat field<small>Redder means more dangerous, given the drone's position and mood</small></span></label>
+              <label><input type="checkbox" id="ovPath" checked><span>Planned route<small>The dashed line UNIT-7 intends to follow; rings mean "wait here"</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Operator</legend>
+            <p class="lede">Change the world while it runs. The agent has no warning.</p>
+            <span class="hint">Clicking the map will:</span>
+            <div class="toolset" role="radiogroup" aria-label="Map click tool">
+              <label title="Hover and click to read a cell's cost and threat"><input type="radio" name="tool" value="inspect" checked>inspect</label>
+              <label title="Click a floor cell to block it, or rubble to clear it"><input type="radio" name="tool" value="rubble">drop rubble</label>
+              <label title="Click to add or remove coolant (step cost 6)"><input type="radio" name="tool" value="hazard">spill coolant</label>
+              <label title="Click a floor cell to teleport the drone there"><input type="radio" name="tool" value="drone">move drone</label>
+            </div>
+            <div class="events">
+              <button class="btn warn" id="evCollapse" title="Collapse a ceiling 2 to 12 steps ahead on the agent's current route">Collapse the route</button>
+              <button class="btn warn" id="evSurge" title="Rewire two lock dials: clues change and any known code stops working">Power surge</button>
+              <button class="btn danger" id="evAlarm" title="Put the drone straight into Chase mode">Sound the alarm</button>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+
+      <aside class="instruments">
+        <div class="panel">
+          <div class="status-head">
+            <h2>Status</h2>
+            <div class="tick" id="stTick">0 <small>ticks</small></div>
+          </div>
+          <div class="mode" id="stMode">booting</div>
+          <div class="bar" aria-label="Hull integrity"><div id="stInteg" style="width:100%"></div></div>
+          <div class="keys" id="stKeys"></div>
+          <div class="metrics" id="stMetrics"></div>
+          <details class="about"><summary>What these numbers mean</summary>
+            <ul>
+              <li><b>Path cost</b>: every step costs 1, or 6 on coolant.</li>
+              <li><b>States explored</b>: how many search nodes all of the agent's plans have expanded so far. Lower is more efficient.</li>
+              <li><b>Replans</b>: how often the agent threw its plan away because the world changed.</li>
+              <li><b>Waits</b>: ticks spent standing still, usually timing a laser gate.</li>
+            </ul>
+          </details>
+        </div>
+
+        <div class="panel">
+          <div class="ptabs" role="tablist" aria-label="Instrument panels">
+            <button role="tab" aria-selected="true" data-p="bt">Decisions</button>
+            <button role="tab" aria-selected="false" data-p="fz">Threat</button>
+            <button role="tab" aria-selected="false" data-p="csp">Lock</button>
+            <button role="tab" aria-selected="false" data-p="fsm">Drone</button>
+            <button role="tab" aria-selected="false" data-p="log">Log</button>
+          </div>
+
+          <section class="ppanel bt" data-p="bt">
+            <p class="lede">The <b>behaviour tree</b> picks what to do next. It is checked from the top every tick, so a higher branch, like Survive, interrupts anything below it.</p>
+            <div id="btTree"></div>
+            <div class="bt-key"><span>? try children until one works</span><span>→ run children in order</span><span>◇ condition</span><span>▸ action</span></div>
+            <div class="bt-key"><span style="color:var(--agent)">blue: running now</span><span style="color:var(--ok)">green: succeeded</span><span style="color:#9f1239">red: failed this tick</span></div>
+          </section>
+
+          <section class="ppanel fuzzy" data-p="fz" hidden>
+            <p class="lede"><b>Fuzzy logic</b> turns three uncertain readings into one threat score from 0 to 100. Above the red dashed line, the agent stops and evades.</p>
+            <header style="display:flex;justify-content:space-between;margin-bottom:6px"><small class="hint">Current reading at the agent's cell</small><small id="fzOut" class="hint">–</small></header>
+            <canvas id="fzCanvas"></canvas>
+            <details class="about"><summary>How to read this</summary>
+              <p>Each curve is a fuzzy set, such as "Near". The dashed line marks the current value, and the number by each set name is how strongly the value belongs to it (0 to 1). The rules below fire with the strength of their weakest condition; their outputs are combined into the shaded shape, and its centre of mass is the threat score.</p>
+            </details>
+            <div class="rules" id="fzRules"></div>
+          </section>
+
+          <section class="ppanel csp" data-p="csp" hidden>
+            <p class="lede">The vault code is a <b>constraint satisfaction</b> puzzle: five different digits that must satisfy every clue. During cracking the dials replay the solver's real search, including dead ends.</p>
+            <header style="display:flex;justify-content:flex-end;margin-bottom:6px"><small id="cspVer" class="hint">clue set v0</small></header>
+            <div class="dials" id="cspDials"></div>
+            <ul class="clues" id="cspClues"></ul>
+            <div class="csp-stats" id="cspStats"></div>
+          </section>
+
+          <section class="ppanel fsm" data-p="fsm" hidden>
+            <p class="lede">The drone runs a <b>finite state machine</b>. It patrols, investigates when it spots the agent, chases until its battery runs low, then cools down. The highlighted state is the current one.</p>
+            <header style="display:flex;justify-content:flex-end;margin-bottom:6px"><small id="fsmInfo" class="hint"></small></header>
+            <svg id="fsmSvg" viewBox="0 0 360 150" role="img" aria-label="Drone finite state machine"></svg>
+          </section>
+
+          <section class="ppanel log" data-p="log" hidden>
+            <p class="lede">Everything the agent decided and everything that happened to it, newest first.</p>
+            <ol id="log"></ol>
+          </section>
+        </div>
+      </aside>
+    </div>
+
+    <section class="section">
+      <h2>Guided scenarios</h2>
+      <p class="sub">Each scenario sets up the simulator to show one behaviour, then tells you what to look for. They all start from a fixed seed, so you see the same thing every time.</p>
+      <div class="scenarios" id="scenarios"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="assets/site.js"></script>
+  <script src="assets/charts.js"></script>
+  <script src="assets/simulator.js"></script>
+</body>
+</html>
