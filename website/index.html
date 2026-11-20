@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UNIT-7 Escape Protocol</title>
+  <meta name="description" content="An AI escape room: an agent plans, decides and adapts as it escapes a facility that keeps changing around it.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%231f2933'/%3E%3Ccircle cx='8' cy='8' r='3.5' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="home">
+  <main class="page">
+    <section class="hero">
+      <div>
+        <div class="course">
+          <p><b>CSCI218 Group Project</b><br>Made for Dr. Abdullah and Dr. Milan by Group 2, Abdullah Wed 10:30–12:30 lab</p>
+          <!-- Team: replace each "ID to be added" with the student ID -->
+          <ul class="team" aria-label="Group 2 members">
+            <li><b>Rohan</b><span>ID to be added</span></li>
+            <li><b>Ibraam</b><span>ID to be added</span></li>
+            <li><b>Vidhi</b><span>ID to be added</span></li>
+            <li><b>Ziya</b><span>ID to be added</span></li>
+            <li><b>Yousef</b><span>ID to be added</span></li>
+          </ul>
+        </div>
+        <h1>An android has to escape a facility that keeps changing around it.</h1>
+        <p>UNIT-7 must collect three keycards, crack a vault lock and reach the exit while a drone hunts it, laser gates switch on and off, ceilings collapse onto its route and the lock rewires itself. It gets out by combining six AI techniques: search, constraint satisfaction, a behaviour tree, fuzzy logic, a state machine and reinforcement learning. Everything is written in Python and runs right here in your browser.</p>
+        <div class="btnrow">
+          <a class="btn primary" href="simulator.html">Open the simulator</a>
+          <a class="btn" href="testing.html">Testing guide</a>
+        </div>
+      </div>
+      <figure class="hero-live">
+        <div class="has-overlay"><div class="pyload" id="pyload"></div><canvas id="heroCanvas" width="620" height="420" aria-label="A live run of the simulation"></canvas></div>
+        <figcaption><span>Live run of the Python simulation in your browser, not a recording</span><span id="heroInfo"></span></figcaption>
+      </figure>
+    </section>
+
+    <section class="section">
+      <h2>How the brief is covered</h2>
+      <p class="sub">Topic 10 asks for an intelligent agent that plans, decides and adapts in a dynamic escape room, evaluated with suitable measures. Each row links to where you can check it.</p>
+      <div class="tablecard"><table class="req">
+        <thead><tr><th>Requirement</th><th>What this project does</th><th>Check it</th></tr></thead>
+        <tbody>
+          <tr><td>Navigate, overcome obstacles, solve challenges, reach a goal</td><td>A 31 × 21 facility generated from a seed. The mission is three keycards, then a lock puzzle at a terminal, then the exit.</td><td><a href="simulator.html?scenario=escape">Full escape</a></td></tr>
+          <tr><td>At least two AI techniques</td><td>Six: A* search (in space and time), constraint satisfaction, a behaviour tree, fuzzy logic, a finite state machine and Q-learning.</td><td><a href="how-it-works.html">How it works</a></td></tr>
+          <tr><td>Dynamic elements</td><td>A moving drone, cycling laser gates, ceiling collapses aimed at the planned route, spreading coolant, and power surges that change the lock's constraints mid-run. You can also cause any of these yourself.</td><td><a href="simulator.html?scenario=block">Block the route</a> · <a href="simulator.html?scenario=surge">Change the lock</a></td></tr>
+          <tr><td>Respond to change instead of following a fixed sequence</td><td>The plan is checked every tick and repaired when it breaks. A fixed-script baseline shows what happens without that.</td><td><a href="simulator.html?scenario=script">Fixed plan</a></td></tr>
+          <tr><td>Evaluate with suitable measures</td><td>Success rate, completion time, path cost, states explored, replans and damage, measured over seeded facilities for seven agent designs.</td><td><a href="benchmark.html">Benchmark</a></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="section">
+      <h2>Six techniques, each with one job</h2>
+      <p class="sub">None of them is decoration: switch any one off in the simulator and the agent behaves measurably worse.</p>
+      <div class="grid3">
+        <a class="card" href="how-it-works.html#astar"><h3>A* search</h3><p>Finds the cheapest route, steers around danger, and times its way through laser gates by planning in time as well as space.</p><span class="more">Read more</span></a>
+        <a class="card" href="how-it-works.html#csp"><h3>Constraint satisfaction</h3><p>Generates a fair vault-lock puzzle and solves it with forward checking, MRV and AC-3, then re-solves it when the clues change.</p><span class="more">Read more</span></a>
+        <a class="card" href="how-it-works.html#bt"><h3>Behaviour tree</h3><p>Decides what to do each tick: survive first, then escape, crack the lock, or collect keycards.</p><span class="more">Read more</span></a>
+        <a class="card" href="how-it-works.html#fuzzy"><h3>Fuzzy logic</h3><p>Turns "how close, how alert, how damaged" into one threat score that shapes routes and triggers evasion.</p><span class="more">Read more</span></a>
+        <a class="card" href="how-it-works.html#fsm"><h3>Finite state machine</h3><p>Runs the security drone: patrol, investigate, chase and cool down.</p><span class="more">Read more</span></a>
+        <a class="card" href="how-it-works.html#rl"><h3>Q-learning</h3><p>A second agent learns the escape by trial and error, which shows why planning copes better when the map changes.</p><span class="more">Read more</span></a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Results at a glance</h2>
+      <p class="sub">Measured on 100 facilities the agent had never been tuned on. The full tables are on the <a href="benchmark.html">Benchmark</a> page and in the report.</p>
+      <div class="tablecard"><table class="plain">
+        <thead><tr><th>Measure</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>Escapes, Dynamic facility</td><td><span class="num-good">99%</span> for UNIT-7, against <span class="num-bad">22%</span> for a fixed plan</td></tr>
+          <tr><td>Escapes, Chaos facility</td><td><span class="num-good">91%</span> for UNIT-7, against <span class="num-bad">7%</span> for a fixed plan</td></tr>
+          <tr><td>States explored, A* compared with Dijkstra</td><td>37% fewer across a whole mission, with the same optimal routes</td></tr>
+          <tr><td>Lock-solving effort, best solver compared with plain backtracking</td><td>8 assignments instead of about 1,850</td></tr>
+          <tr><td>Laser zaps when planning in time</td><td>none in 100 runs, against 0.15 per run without it</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="section">
+      <h2>What is on each page</h2>
+      <div class="grid3">
+        <a class="card" href="simulator.html"><h3>Simulator</h3><p>Watch the agent live, change the facility while it runs, and follow guided scenarios.</p></a>
+        <a class="card" href="benchmark.html"><h3>Benchmark</h3><p>Run hundreds of missions and compare agent designs on every measure, with CSV export.</p></a>
+        <a class="card" href="learning.html"><h3>Learning lab</h3><p>Train a Q-learning agent, inspect what it learned, and break it.</p></a>
+        <a class="card" href="how-it-works.html"><h3>How it works</h3><p>Each technique explained, with links to see it in action.</p></a>
+        <a class="card" href="testing.html"><h3>Testing guide</h3><p>Run the 19 automated Python tests in the browser and tick off each requirement.</p></a>
+        <a class="card" href="https://github.com/RohanRaoCs/ai-escape-room/blob/main/docs/REPORT.md" target="_blank" rel="noopener"><h3>Report</h3><p>Design, method and full results, including where the agent falls short.</p></a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="assets/site.js"></script>
+  <script src="assets/charts.js"></script>
+  <script src="assets/home.js"></script>
+</body>
+</html>
